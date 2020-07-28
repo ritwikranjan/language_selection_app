@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+void main() async {
   runApp(MyApp());
 }
 
@@ -28,7 +28,20 @@ class LanguageSelectWidget extends StatefulWidget {
 }
 
 class _LanguageSelectWidgetState extends State<LanguageSelectWidget> {
-  String selected = 'English';
+  String selected;
+
+  _getSelectedLanguage() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    setState(() {
+      selected = preferences.getString('selectedLanguage') ?? 'English';
+    });
+  }
+
+  @override
+  void initState() {
+    _getSelectedLanguage();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,22 +55,29 @@ class _LanguageSelectWidgetState extends State<LanguageSelectWidget> {
             crossAxisSpacing: 15.0,
             mainAxisSpacing: 40.0,
             children: _languages
-                .map((language) => FlatButton(
-                      onPressed: () {
-                        setState(() {
-                          selected = language;
-                        });
-                      },
+                .map((language) => Padding(
+                      padding: const EdgeInsets.all(12.0),
                       child: Container(
                         decoration: BoxDecoration(
                           color: (selected == language)
                               ? Colors.redAccent
-                              : Colors.lightBlueAccent,
+                              : Colors.lightBlueAccent[100].withOpacity(0.2),
                           shape: BoxShape.circle,
+                          border: Border.all(
+                            width: 1.0,
+                          ),
                         ),
-                        child: Center(
-                          child: Text(
-                            language,
+                        child: RawMaterialButton(
+                          shape: CircleBorder(),
+                          onPressed: () {
+                            setState(() {
+                              selected = language;
+                            });
+                          },
+                          child: Center(
+                            child: Text(
+                              language,
+                            ),
                           ),
                         ),
                       ),
@@ -73,7 +93,7 @@ class _LanguageSelectWidgetState extends State<LanguageSelectWidget> {
                 size: 30.0,
               ),
               onPressed: () {
-                addStringToSF(selected);
+                addToSF(selected);
               },
             ),
           )
@@ -83,9 +103,10 @@ class _LanguageSelectWidgetState extends State<LanguageSelectWidget> {
   }
 }
 
-addStringToSF(String language) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  prefs.setString('selectedLanguage', language);
+void addToSF(String language) async {
+  SharedPreferences preferences = await SharedPreferences.getInstance();
+  preferences.setString('selectedLanguage', language);
+  print(preferences);
 }
 
 List<String> _languages = [
